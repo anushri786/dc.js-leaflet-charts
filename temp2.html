@@ -1,0 +1,441 @@
+<!doctype html>
+<html>
+    <head>
+        <title>dc.js leaflet marker</title>
+
+        <link rel="stylesheet" href="css/dc.css">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css">
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css">
+		 <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        
+		<script src="js/d3.min.js"></script>
+        <script src="js/crossfilter.min.js"></script>
+        <script src="js/dc.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
+        <script src="js/color-brewer.js"></script>
+		
+		<script type="text/javascript" src="js/d3.js"></script>
+	<script type="text/javascript" src="js/crossfilter.js"></script>
+	<script type="text/javascript" src="js/underscore.js"></script>
+
+        <!-- <script src="../dist/leaflet-map/dc-leaflet.js"></script> -->
+
+        <!-- use src for testing -->
+        <script src="js/base-map-chart.js"></script>
+        <script src="js/base-leaflet-chart.js"></script>
+        <script src="js/leaflet-marker-chart.js"></script>
+        <script src="js/leaflet-choropleth-chart.js"></script>
+        <script src="js/leaflet-legend.js"></script>
+
+        <style>
+            #holder {
+              width:850px;
+              margin:20px auto;
+            }
+            #holder>div {
+              padding:30px 0;
+              clear:both;
+            }
+            .map {
+              width:720px;
+             
+             
+			 
+			  height: 800px;
+   border-style:solid;
+				
+			}
+			
+           
+          </style>
+    </head>
+    <body>
+	
+	<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-12 dc-data-count dc-chart" id="data-count">
+      <h2>Ground Water Analysis
+        <small>
+          <span class="filter-count"></span> selected out of <span class="total-count"></span> records |
+           <a id="all" href="#">Reset All</a>
+          </span>
+        </small>
+      </h1>
+    </div>
+  </div>
+  <div class="row" id="control-row">
+    <div class="col-xs-2 pie-chart">
+      <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;YEAR <small><a id="year">reset</a></small></h4>
+      <div class="dc-chart" id="chart-ring-year"></div>
+    </div>
+	
+	
+	 <div class="col-xs-2 pie-chart">
+      <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DISTRICT<small><a id="month" href="#">reset</a></small></h4>
+      <div class="dc-chart" id="chart-ring-month"></div>
+    </div>
+	
+	
+	
+	
+	<div class="col-xs-16">
+      <h4><center>Map</center></h4>
+	  <div id="demo1">
+      <div class="map"></div>
+    </div>
+	</div>
+	
+	</div>
+	
+  </div>
+    <div class="col-xs-6 col-md-3">
+	<div class="divide">
+      <div class="dc-chart" id="chart-rating-count"></div>
+    </div>
+	</div>
+	
+	 <div class="col-xs-6 col-md-3">
+	<div class="divide1">
+      <div class="dc-chart" id="chart-community-rating-count"></div>
+    </div>
+	</div>
+	<div class="col-xs-6 col-md-3">
+	<div class="divide2">
+      <div class="dc-chart" id="chart-abv-count"></div>
+    </div>
+	</div>
+	<div class="col-xs-6 col-md-3">
+	<div class="divide3">
+      <div class="dc-chart" id="chart-ibu-count"></div>
+    </div>
+	</div>
+   
+	
+	
+	
+
+        
+
+         
+        <script>
+		
+		  
+
+     
+		
+		
+	d3.json("file/groundwater.json", function(error, data) {
+	
+
+	
+		var welldata = data.items;
+		drawMarkerSelect(welldata);
+		
+		
+		
+		
+		
+      
+
+		/*beerData.filter(function (el) {
+  return el.MONSOON >0 &&
+         el.POSTMONSOO >0 &&
+         el.PREMONSOON >0 &&
+         el.POSTMONS_1 >0;
+});*/
+
+
+/*var newArray = beerData.filter(
+   items.MONSOON >0  & 
+   items.POSTMONSOO >0  &
+    items.PREMONSOON >0  & 
+   items.POSTMONS_1 >0);
+   */
+   
+   var newArray = _.filter (welldata, function(home) {
+    return home.MONSOON >0 && home.PREMONSOON >0 && home.POSTMONSOO >0 && home.POSTMONS_1 >0;
+   });
+
+
+		//var fullDateFormat = d3.time.format('%a, %d %b %Y %X %Z');
+		//var yearFormat = d3.time.format('%Y');
+	
+
+		//normalize/parse data so dc can coorrectly sort and bin them
+		newArray.forEach(function(d) {
+		
+		
+		
+		d.YEAR_OBS = d.YEAR_OBS.match(/\d+/)[0];
+		d.DISTRICT = d.DISTRICT.match(/\w+/);
+		
+		
+		
+			//d.count = +d.count;
+			//round to nearest 0.25
+			d.MONSOON = +d.MONSOON;
+			d.PREMONSOON = +d.PREMONSOON;
+			d.POSTMONSOO=+d.POSTMONSOO;
+			d.POSTMONS_1=+d.POSTMONS_1;
+			//d.DISTRICT=+d.DISTRICT;
+			//d.beer.rating_score = Math.round(+d.beer.rating_score * 4) / 4;
+			//round to nearest 0.5
+			//d.beer.beer_abv = Math.round(+d.beer.beer_abv * 2) / 2;
+			//round to nearest 10
+			//d.beer.beer_ibu = Math.floor(+d.beer.beer_ibu / 10) * 10;
+			//d.first_had_dt = fullDateFormat.parse(d.first_had);
+			//d.first_had_year = +yearFormat(d.first_had_dt);
+			
+		});
+
+		//set crossfilter
+		var ndx = crossfilter(newArray);
+
+		//create dimensions (x-axis values)
+		  var yearDim = ndx.dimension(function(d) {return d.YEAR_OBS;}),
+		  dist = ndx.dimension(function(d) {return d.DISTRICT;}),
+		//dc.pluck:  short hand for same kind of anonymous function we used for yearDim
+				
+				    ratingDim = ndx.dimension(dc.pluck('MONSOON')),
+					ratingDim1 = ndx.dimension(dc.pluck('PREMONSOON')),
+					ratingDim2 = ndx.dimension(dc.pluck('POSTMONSOO')),
+					ratingDim3 = ndx.dimension(dc.pluck('POSTMONS_1')),
+				//commRatingDim = ndx.dimension(function(d) {return d.beer.rating_score;}),
+				//abvDim = ndx.dimension(function(d) {return d.PREMONSOON;}),
+				//ibuDim = ndx.dimension(function(d) {return d.beer.beer_ibu;}),
+				allDim = ndx.dimension(function(d) {return d;});
+
+		//creating groups (y-axis values)
+		var all = ndx.groupAll();
+		var countPerYear = yearDim.group().reduceCount(),
+		countPerDist = dist.group().reduceCount(),
+				
+				countPerRating = ratingDim.group().reduceCount()
+				countPerRating1 = ratingDim1.group().reduceCount()
+				countPerRating2 = ratingDim2.group().reduceCount()
+				countPerRating3= ratingDim3.group().reduceCount();
+				
+
+				//countPerCommRating = commRatingDim.group().reduceCount();
+				//countPerABV = abvDim.group().reduceCount();
+				//countPerIBU = ibuDim.group().reduceCount();
+
+		//creating charts
+		 var yearChart = dc.pieChart('#chart-ring-year'),
+		 monthChart   = dc.pieChart('#chart-ring-month'),
+				
+				ratingCountChart = dc.barChart('#chart-rating-count'),
+				ratingCountChart1 = dc.barChart('#chart-community-rating-count'),
+				ratingCountChart2 = dc.barChart('#chart-abv-count'),
+				ratingCountChart3 = dc.barChart('#chart-ibu-count'),
+				//commRatingCountChart = dc.barChart('#chart-community-rating-count'),
+				//abvCountChart = dc.barChart('#chart-abv-count'),
+				//ibuCountChart = dc.barChart('#chart-ibu-count'),
+				dataCount = dc.dataCount('#data-count'),
+				dataTable = dc.dataTable('#data-table');
+
+		////chart configuration
+
+		//circle charts
+		
+		
+		
+		yearChart
+			.width(200)
+			.height(200)
+			.dimension(yearDim)
+			.group(countPerYear)
+		    .innerRadius(20);
+			
+			
+			
+			
+		monthChart
+			.width(200)
+			.height(200)
+			.dimension(dist)
+			.group(countPerDist)
+			.innerRadius(20);
+
+
+		
+
+		//bar charts
+		ratingCountChart
+			.width(350)
+			.height(230)
+			.dimension(ratingDim)
+			.group(countPerRating)
+			.x(d3.scale.linear().domain([-0.2, d3.max(newArray, function (d) { return d.MONSOON; }) + 0.2]))
+  
+            .y(d3.scale.linear().domain([-0.2, d3.max(newArray, function (d) { return d.MONSOON>0; }) + 0.2]))
+			.elasticY(true)
+			.centerBar(true)
+			.barPadding(5)
+			.xAxisLabel('MONSOON')
+			.yAxisLabel('Count')
+			
+			/*.y(function(d) { return y(d.y); })
+    .defined(function(d) { return d.y; }) // Omit empty values.
+    .x(function(d,i) { return x(i); });
+    */
+			.margins({top:10, right: 20, bottom: 50, left: 40});
+		   ratingCountChart.xAxis().tickValues([0,10,20,30,40,50,60,70,80,90,100,110]);
+		
+			
+		
+		ratingCountChart1
+			.width(350)
+			.height(230)
+			.dimension(ratingDim1)
+			.group(countPerRating1)
+			.x(d3.scale.linear().domain([-0.2, d3.max(newArray, function (d) { return d.PREMONSOON; }) + 0.2]))
+			.elasticY(true)
+			.centerBar(true)
+			.barPadding(5)
+			.xAxisLabel('PREMONSOON')
+			.yAxisLabel('Count')
+			.margins({top: 2, right: 20, bottom: 50, left: 50});
+		ratingCountChart1.xAxis().tickValues([0,10,20,30,40,50,60,70,80,90,100,110]);
+		
+		
+		
+		ratingCountChart2
+			.width(350)
+			.height(230)
+			.dimension(ratingDim2)
+			.group(countPerRating2)
+			.x(d3.scale.linear().domain([-0.2, d3.max(newArray, function (d) { return d.POSTMONSOO; }) + 0.2]))
+			.elasticY(true)
+			.centerBar(true)
+			.barPadding(5)
+			.xAxisLabel('POSTMONSOON')
+			.yAxisLabel('Count')
+			.margins({top: 10, right: 20, bottom: 50, left: 50});
+		ratingCountChart1.xAxis().tickValues([0,10,20,30,40,50,60,70,80,90,100,110,120]);
+		
+		ratingCountChart3
+			.width(350)
+			.height(230)
+			.dimension(ratingDim3)
+			.group(countPerRating3)
+			.x(d3.scale.linear().domain([-0.2, d3.max(newArray, function (d) { return d.POSTMONS_1; }) + 0.2]))
+			.elasticY(true)
+			.centerBar(true)
+			.barPadding(5)
+			.xAxisLabel('POSTMONSOON_1')
+			.yAxisLabel('Count')
+			.margins({top: 10, right: 20, bottom: 50, left: 50});
+		ratingCountChart1.xAxis().tickValues([0,10,20,30,40,50,60,70,80,90,100,110,120]);
+		
+
+
+		/*commRatingCountChart
+			.width(300)
+			.height(180)
+			.dimension(commRatingDim)
+			.group(countPerCommRating)
+			.x(d3.scale.linear().domain([0,5.2]))
+			.elasticY(true)
+			.centerBar(true)
+			.barPadding(5)
+			.xAxisLabel('Community rating')
+			.yAxisLabel('Count')
+			.margins({top:10, right: 20, bottom: 50, left: 50});
+			commRatingCountChart.xAxis().tickValues([0,1,2,3,4,5]);
+			*/
+
+		/*abvCountChart
+			.width(300)
+			.height(180)
+			.dimension(abvDim)
+			.group(countPerABV)
+			.x(d3.scale.linear().domain([-9.2, d3.max(beerData, function(d) {return d.PREMONSOON; }))
+			.elasticY(true)
+			.centerBar(true)
+			.barPadding(2)
+			.xAxisLabel('PREMONSOON')
+			.yAxisLabel('Count')
+			.margins({top:10, right:20, bottom:50, left:50});
+			*/
+		
+	
+
+		dataCount
+			.dimension(ndx)
+			.group(all);
+			
+			
+
+		//data table
+		dataTable
+			.dimension(allDim)
+			.group(function (d) { return 'dc.js insists on putting a row here so I remove it using js'; })
+			.size(100)
+			
+			
+				 
+		   function drawMarkerSelect(welldata) { 
+          var xf = crossfilter(welldata);
+          var groupname = "marker-select";
+          var facilities = xf.dimension(function(d) { return d.LAT; });
+          var facilitiesGroup = facilities.group().reduceCount();
+
+          var marker = dc.leafletMarkerChart("#demo1 .map",groupname)
+              .dimension(facilities)
+              .group(facilitiesGroup)
+              .width(600)
+              .height(400)			  
+              .fitOnRender(true)
+              .fitOnRedraw(true)
+              .popupOnHover(true)
+              .cluster(true);
+
+         
+          
+
+          dc.renderAll(groupname);
+          return {marker: marker};
+	     
+	  
+		
+		
+ }
+
+		d3.selectAll('a#all').on('click', function() {
+			dc.filterAll();
+			dc.renderAll();
+	
+		});
+
+		d3.selectAll('a#year').on('click', function() {
+			yearChart.filterAll();
+			dc.redrawAll();
+		});
+		d3.selectAll('a#month').on('click', function () {
+    monthChart.filterAll();
+    dc.redrawAll();
+  });
+ 
+
+
+		dc.renderAll();
+		
+		/*beerData.filter(function(d) {
+var elem = document.getElementById("chart-rating-count");
+		
+		//console.log(d)
+    return d.MONSOON == 0; 
+})
+elem.remove();
+*/
+
+	});
+		
+    
+        </script>
+    </body>
+</html>
